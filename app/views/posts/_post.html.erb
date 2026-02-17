@@ -1,0 +1,36 @@
+<% show_view_link = local_assigns.fetch(:show_view_link, true) %>
+<% show_owner_actions = local_assigns.fetch(:show_owner_actions, true) %>
+<% post_owner = current_user && post.user_id == current_user.id %>
+<% has_actions = show_view_link || (show_owner_actions && post_owner) %>
+
+<div id="<%= dom_id post %>" class="post-list-card">
+  <section class="post-title-row">
+    <span class="ui-pill post-title-pill"><%= post.title %></span>
+  </section>
+
+  <section class="post-meta-section">
+    <span class="post-meta-label">AUTHOR</span>
+    <span class="ui-pill post-meta-pill"><%= post.user&.email.presence || "unknown" %></span>
+    <span class="post-meta-arrow">•</span>
+    <span class="post-meta-label">CATEGORY</span>
+    <span class="ui-pill post-meta-pill"><%= post.category.presence || "general" %></span>
+
+    <span class="post-meta-spacer"></span>
+    <span class="post-meta-date"><%= l(post.created_at, format: :short) %></span>
+  </section>
+
+  <div class="post-body-content"><%= simple_format(h(post.body)) %></div>
+
+  <% if has_actions %>
+    <section class="post-card-actions">
+      <% if show_view_link %>
+        <%= link_to "Προβολή", post, class: "ui-btn ui-btn-secondary" %>
+      <% end %>
+
+      <% if show_owner_actions && post_owner %>
+        <%= link_to "Επεξεργασία", edit_post_path(post), class: "ui-btn ui-btn-secondary" %>
+        <%= button_to "Διαγραφή", post, method: :delete, class: "ui-btn ui-btn-danger", form_class: "post-inline-form" %>
+      <% end %>
+    </section>
+  <% end %>
+</div>

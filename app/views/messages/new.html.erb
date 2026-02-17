@@ -1,0 +1,98 @@
+<section class="section-card chat-workspace-shell <%= params[:panel].to_s == "1" ? "chat-workspace-panel" : "" %>">
+  <div class="chat-workspace-header chat-workspace-header-left">
+    <% back_target = params[:mode].to_s == "group" ? groups_messages_path(panel: params[:panel]) : messages_path(panel: params[:panel]) %>
+    <%= link_to "←", back_target, class: "auth-back-link", aria: { label: "Πίσω" } %>
+    <h1>Νέα συνομιλία</h1>
+  </div>
+
+  <section class="chat-compose-box" data-chat-compose>
+    <div class="chat-compose-tabs">
+      <button type="button" class="ui-tab <%= @compose_mode == "personal" ? "is-active" : "" %>" data-compose-mode="personal">Προσωπική</button>
+      <button type="button" class="ui-tab <%= @compose_mode == "group" ? "is-active" : "" %>" data-compose-mode="group">Ομαδική</button>
+    </div>
+
+    <%= form_with model: @message, url: messages_path do |form| %>
+      <%= hidden_field_tag :panel, params[:panel] %>
+      <%= form.hidden_field :subject, value: "Chat" %>
+      <%= form.hidden_field :delivery_mode, value: (params[:mode].presence || @compose_mode), data: { compose_mode_field: true } %>
+
+      <% if @message.errors.any? %>
+        <div class="post-form-errors">
+          <h2><%= pluralize(@message.errors.count, "error") %> errors:</h2>
+          <ul>
+            <% @message.errors.each do |error| %>
+              <li><%= error.full_message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="chat-compose-panel <%= @compose_mode == "personal" ? "" : "is-hidden" %>" data-compose-panel="personal">
+        <div class="field message-field-compact">
+          <%= form.label :recipient_id, "Παραλήπτης" %>
+          <%= form.collection_select :recipient_id, @available_users, :id, :email, include_blank: true %>
+        </div>
+      </div>
+
+      <div class="chat-compose-panel <%= @compose_mode == "group" ? "" : "is-hidden" %>" data-compose-panel="group">
+        <div class="field message-field-compact">
+          <%= form.label :group_name, "Όνομα ομαδικής" %>
+          <%= form.text_field :group_name, value: params.dig(:message, :group_name), placeholder: "π.χ. ΥΠΛΟ LAB" %>
+        </div>
+
+        <div class="field message-field-compact">
+          <label>Μέλη ομάδας</label>
+          <div class="recipient-checkbox-list">
+            <%= form.collection_check_boxes :recipient_ids, @available_users, :id, :email do |check| %>
+              <div class="recipient-checkbox-item">
+                <%= check.check_box %>
+                <%= check.text %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <%= form.label :body, "Μήνυμα" %>
+        <%= form.text_area :body, rows: 4, class: "chat-reply-input", placeholder: "Γράψε μήνυμα..." %>
+      </div>
+
+      <div class="actions">
+        <%= form.submit "Αποστολή", class: "ui-btn ui-btn-primary" %>
+      </div>
+    <% end %>
+  </section>
+</section>
+
+<script>
+  (function () {
+    var root = document.querySelector("[data-chat-compose]");
+    if (!root) return;
+
+    var modeField = root.querySelector("input[data-compose-mode-field]");
+    var tabs = root.querySelectorAll("[data-compose-mode]");
+    var panels = root.querySelectorAll("[data-compose-panel]");
+
+    function applyMode(mode) {
+      if (modeField) modeField.value = mode;
+
+      tabs.forEach(function (tab) {
+        tab.classList.toggle("is-active", tab.getAttribute("data-compose-mode") === mode);
+      });
+
+      panels.forEach(function (panel) {
+        var active = panel.getAttribute("data-compose-panel") === mode;
+        panel.classList.toggle("is-hidden", !active);
+      });
+    }
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        applyMode(tab.getAttribute("data-compose-mode"));
+      });
+    });
+
+    applyMode(modeField && modeField.value ? modeField.value : "personal");
+  })();
+</script>

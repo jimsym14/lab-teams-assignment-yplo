@@ -1,0 +1,21 @@
+<div class="auth-page-header">
+  <div class="auth-title-left">
+    <%= link_to "←", new_session_path(resource_name), class: "auth-back-link", aria: { label: "Go back to login" } %>
+    <h2>Forgot your password?</h2>
+  </div>
+</div>
+
+<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
+  <%= render "devise/shared/error_messages", resource: resource %>
+
+  <div class="field">
+    <%= f.label :email %>
+    <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
+  </div>
+
+  <div class="actions auth-form-actions">
+    <%= f.submit "Send reset instructions", class: "ui-btn ui-btn-primary" %>
+  </div>
+<% end %>
+
+<%= render "devise/shared/links" %>

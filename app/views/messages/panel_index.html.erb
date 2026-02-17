@@ -1,0 +1,46 @@
+<section class="chat-panel-shell">
+  <header class="chat-panel-topbar">
+    <h1>Συνομιλίες</h1>
+  </header>
+
+  <div class="chat-panel-tabs">
+    <%= link_to "Προσωπικές", messages_path(panel: 1, tab: "personal"), class: "ui-tab #{@active_tab == "personal" ? "is-active" : ""}" %>
+    <%= link_to "Ομαδικές", messages_path(panel: 1, tab: "group"), class: "ui-tab #{@active_tab == "group" ? "is-active" : ""}" %>
+  </div>
+
+  <div class="chat-panel-list">
+    <% if @active_tab == "group" %>
+      <% if @conversations.any? %>
+        <% @conversations.each do |row| %>
+          <% group_chat = row[:group_chat] %>
+          <% last_message = row[:last_message] %>
+
+          <%= link_to chat_messages_path(panel: 1, tab: "group", group_chat_id: group_chat.id), class: "ui-list-item ui-list-item-group chat-contact-card" do %>
+            <div class="chat-contact-name"><%= group_chat.name %></div>
+            <div class="chat-contact-email chat-group-members">
+              Μέλη: <%= group_chat.members.where.not(id: current_user.id).map { |member| member.name.presence || member.email }.join(", ") %>
+            </div>
+            <div class="chat-contact-preview"><%= last_message.body.to_s %></div>
+          <% end %>
+        <% end %>
+      <% else %>
+        <p class="empty-state">Δεν υπάρχουν ομάδες.</p>
+      <% end %>
+    <% else %>
+      <% if @conversations.any? %>
+        <% @conversations.each do |row| %>
+          <% user = row[:user] %>
+          <% last_message = row[:last_message] %>
+
+          <%= link_to chat_messages_path(panel: 1, tab: "personal", chat_with: user.id), class: "ui-list-item chat-contact-card" do %>
+            <div class="chat-contact-name"><%= user.name.presence || user.email %></div>
+            <div class="chat-contact-email"><%= user.email %></div>
+            <div class="chat-contact-preview"><%= last_message.body.to_s %></div>
+          <% end %>
+        <% end %>
+      <% else %>
+        <p class="empty-state">Δεν υπάρχουν συνομιλίες.</p>
+      <% end %>
+    <% end %>
+  </div>
+</section>

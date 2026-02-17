@@ -1,0 +1,73 @@
+<section class="section-card chat-workspace-shell <%= params[:panel].to_s == "1" ? "chat-workspace-panel" : "" %>">
+  <div class="chat-workspace-header chat-workspace-header-left">
+    <h1>Ομάδες</h1>
+  </div>
+
+  <div class="chat-layout">
+    <aside class="chat-sidebar">
+      <div class="chat-sidebar-nav">
+        <%= link_to "Συνομιλίες", messages_path(panel: params[:panel]), class: "ui-tab" %>
+        <%= link_to "Ομάδες", groups_messages_path(panel: params[:panel]), class: "ui-tab is-active" %>
+      </div>
+
+      <%= link_to "Νέα ομαδική", new_message_path(panel: params[:panel], mode: "group"), class: "ui-btn ui-btn-primary chat-new-in-list" %>
+
+      <div class="chat-contact-list">
+        <% if @conversations.any? %>
+          <% @conversations.each do |row| %>
+            <% group_chat = row[:group_chat] %>
+            <% last_message = row[:last_message] %>
+            <% card_classes = "ui-list-item ui-list-item-group chat-contact-card" %>
+            <% card_classes += " is-active" if @active_group_chat&.id == group_chat.id %>
+
+            <%= link_to groups_messages_path(group_chat_id: group_chat.id, panel: params[:panel]), class: card_classes do %>
+              <div class="chat-contact-name"><%= group_chat.name %></div>
+              <div class="chat-contact-email chat-group-members">
+                Μέλη: <%= group_chat.members.where.not(id: current_user.id).map { |member| member.name.presence || member.email }.join(", ") %>
+              </div>
+              <div class="chat-contact-preview"><%= last_message.body.to_s %></div>
+            <% end %>
+          <% end %>
+        <% else %>
+          <span class="ui-pill ui-pill-muted">Δεν υπάρχουν ομάδες</span>
+        <% end %>
+      </div>
+    </aside>
+
+    <div class="chat-main">
+      <% if @active_group_chat.present? %>
+        <div class="chat-main-header chat-main-header-group">
+          <strong><%= @active_group_chat.name %></strong>
+          <span>
+            Μέλη: <%= @active_group_chat.members.where.not(id: current_user.id).map { |member| member.name.presence || member.email }.join(", ") %>
+          </span>
+        </div>
+
+        <div class="chat-thread-list" id="chat-thread-list">
+          <% @conversation_messages.each do |message| %>
+            <%= render partial: "messages/message", locals: { message: message } %>
+          <% end %>
+        </div>
+
+        <div class="chat-reply-box">
+          <%= form_with model: @reply_message, url: messages_path do |form| %>
+            <%= form.hidden_field :delivery_mode, value: "group" %>
+            <%= form.hidden_field :subject, value: "Chat" %>
+            <%= form.hidden_field :group_chat_id, value: @active_group_chat.id %>
+            <%= hidden_field_tag :panel, params[:panel] %>
+
+            <div class="field">
+              <%= form.text_area :body, rows: 3, class: "chat-reply-input", placeholder: "Γράψε μήνυμα στην ομάδα..." %>
+            </div>
+
+            <div class="actions">
+              <%= form.submit "Αποστολή", class: "ui-btn ui-btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="empty-state">Επίλεξε ομάδα από τη λίστα για να ανοίξει το chat.</p>
+      <% end %>
+    </div>
+  </div>
+</section>

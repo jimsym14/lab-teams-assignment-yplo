@@ -1,0 +1,21 @@
+<section class="section-card message-editor-card">
+  <div class="page-title-row">
+    <%= link_to "←", messages_path, class: "auth-back-link", aria: { label: "Επιστροφή στα μηνύματα" } %>
+    <h1>Επεξεργασία μηνύματος</h1>
+  </div>
+
+  <%= form_with(model: @message) do |form| %>
+    <%= form.hidden_field :delivery_mode, value: @message.delivery_mode.presence || "personal" %>
+    <%= form.hidden_field :recipient_id, value: @message.recipient_id %>
+    <%= form.hidden_field :subject, value: @message.subject.presence || "Chat" %>
+
+    <div class="field">
+      <%= form.label :body, "Μήνυμα" %>
+      <%= form.text_area :body, rows: 6, class: "post-body-input" %>
+    </div>
+
+    <div class="actions page-actions-row">
+      <%= form.submit "Αποθήκευση", class: "ui-btn ui-btn-primary" %>
+    </div>
+  <% end %>
+</section>

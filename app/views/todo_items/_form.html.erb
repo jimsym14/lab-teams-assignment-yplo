@@ -1,0 +1,32 @@
+<%= form_with(model: todo_item) do |form| %>
+  <% if todo_item.errors.any? %>
+    <div class="post-form-errors">
+      <h2><%= pluralize(todo_item.errors.count, "error") %> prohibited this todo_item from being saved:</h2>
+
+      <ul>
+        <% todo_item.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :todo_id %>
+    <%= form.text_field :todo_id %>
+  </div>
+
+  <div class="field">
+    <%= form.label :title %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div class="field">
+    <%= form.label :done %>
+    <%= form.check_box :done %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit "Αποθήκευση", class: "ui-btn ui-btn-primary" %>
+  </div>
+<% end %>

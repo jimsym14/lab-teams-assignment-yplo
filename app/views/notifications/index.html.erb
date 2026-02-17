@@ -1,0 +1,42 @@
+<section class="section-card notifications-page">
+  <div class="page-topbar">
+    <h1>Ειδοποιήσεις</h1>
+  </div>
+  <p class="notifications-refresh-note">Αυτόματη ανανέωση ανά 8 δευτερόλεπτα για να φαίνονται τα νέα</p>
+
+  <script>
+    setTimeout(function () {
+      window.location.reload();
+    }, 8000);
+  </script>
+  <% if @notifications.any? %>
+    <ul class="notifications-list">
+      <% @notifications.each do |notification| %>
+        <% sender_label = notification.message.sender&.name.presence || notification.message.sender&.email || "Άγνωστος αποστολέας" %>
+        <li class="ui-list-item notifications-item">
+          <div class="notifications-item-content">
+            <p class="notifications-message-line">
+              <span class="notifications-sender"><%= sender_label %></span>
+              <span class="notifications-dot">•</span>
+              <span class="notifications-subject">Subject: <%= notification.message.subject %></span>
+              <span class="notifications-dot">•</span>
+              <span class="notifications-preview">Μήνυμα: <%= notification.message.body %></span>
+            </p>
+
+            <p class="notifications-meta-line">
+              <%= notification.read_at.present? ? "Διαβασμένο" : "Μη διαβασμένο" %>
+            </p>
+          </div>
+
+          <% if notification.read_at.present? %>
+            <span class="notifications-read-badge">✓ Διαβασμένο</span>
+          <% else %>
+            <%= button_to "Σήμανση ως διαβασμένο", mark_read_notification_path(notification), method: :patch, class: "ui-btn ui-btn-secondary" %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="empty-state">Δεν υπάρχουν νέες ειδοποιήσεις.</p>
+  <% end %>
+</section>

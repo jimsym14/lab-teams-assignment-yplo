@@ -1,0 +1,8 @@
+<section class="section-card">
+  <div class="page-title-row">
+    <%= link_to "←", todos_path, class: "auth-back-link", aria: { label: "Back to todos" } %>
+    <h1>New todo</h1>
+  </div>
+
+  <%= render "form", todo: @todo %>
+</section>

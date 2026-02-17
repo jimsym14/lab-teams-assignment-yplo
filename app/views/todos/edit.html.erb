@@ -1,0 +1,12 @@
+<section class="section-card">
+  <div class="page-title-row">
+    <%= link_to "←", todos_path, class: "auth-back-link", aria: { label: "Back to todos" } %>
+    <h1>Editing todo</h1>
+  </div>
+
+  <%= render "form", todo: @todo %>
+
+  <div class="page-actions-row">
+    <%= link_to "Show this todo", @todo, class: "ui-btn ui-btn-secondary" %>
+  </div>
+</section>

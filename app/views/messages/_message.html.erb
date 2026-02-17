@@ -1,0 +1,28 @@
+<% outgoing = message.sender_id == current_user&.id %>
+<% group_message = message.group_chat_id.present? %>
+<% sender_label = outgoing ? "Εσύ" : (message.sender&.name.presence || message.sender&.email || "Μέλος ομάδας") %>
+
+<div id="<%= dom_id message %>" class="chat-bubble-row <%= outgoing ? "chat-bubble-out" : "chat-bubble-in" %>" data-own-message="<%= outgoing %>">
+  <div class="chat-bubble" data-message-id="<%= message.id %>" data-update-url="<%= message_path(message) %>" data-delete-url="<%= message_path(message) %>" data-original-body="<%= message.body %>">
+    <% if group_message %>
+      <div class="chat-bubble-sender"><%= sender_label %></div>
+    <% end %>
+    <div class="chat-bubble-text" data-bubble-text><%= simple_format(h(message.body)) %></div>
+    <div class="chat-bubble-time" data-bubble-time><%= l(message.created_at, format: :short) %></div>
+
+    <% if outgoing %>
+      <div class="chat-message-menu" data-chat-menu>
+        <button type="button" class="chat-menu-item" data-chat-action="edit">Επεξεργασία</button>
+        <button type="button" class="chat-menu-item chat-menu-item-danger" data-chat-action="delete">Διαγραφή</button>
+      </div>
+
+      <div class="chat-inline-editor is-hidden" data-inline-editor>
+        <textarea class="chat-inline-input" data-inline-input><%= message.body %></textarea>
+        <div class="chat-inline-actions">
+          <button type="button" class="chat-inline-btn chat-inline-cancel" data-inline-cancel title="Ακύρωση">✕</button>
+          <button type="button" class="chat-inline-btn chat-inline-apply" data-inline-apply title="Εφαρμογή">✓</button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

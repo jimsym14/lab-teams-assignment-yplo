@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>LabTeamPortal</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+  </head>
+
+  <body>
+    <% panel_mode = params[:panel].to_s == "1" %>
+    <% visible_flashes = flash.to_hash.reject { |_, value| value.blank? } %>
+    <% if visible_flashes.any? %>
+      <div class="flash-stack" aria-live="polite" aria-atomic="true">
+        <% visible_flashes.each do |type, message| %>
+          <% next if type.to_s == "timedout" %>
+          <% style_class = type.to_s == "alert" ? "flash-toast-error" : "flash-toast-success" %>
+          <div class="flash-toast <%= style_class %>" data-flash-toast>
+            <%= message %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if user_signed_in? %>
+      <% if panel_mode %>
+        <main class="chat-panel-frame">
+          <%= yield %>
+        </main>
+      <% else %>
+      <div class="app-shell">
+        <aside class="app-sidebar">
+          <div class="app-brand">Lab Team Portal</div>
+          <div class="app-user"><%= current_user.email %></div>
+
+          <nav class="app-nav">
+            <%= link_to "Αναρτήσεις", posts_path, class: "nav-link" %>
+            <%= link_to "Μηνύματα", messages_path, class: "nav-link" %>
+            <%= link_to "Επαφές", contacts_path, class: "nav-link" %>
+            <%= link_to "Ειδοποιήσεις (#{current_user.notifications.unread.count})", notifications_path, class: "nav-link" %>
+          </nav>
+
+          <%= button_to "Logout", destroy_user_session_path, method: :delete, class: "logout-btn" %>
+        </aside>
+
+        <main class="app-main">
+          <%= yield %>
+        </main>
+      </div>
+
+      <button type="button" id="chat-fab" class="chat-fab" title="Άνοιγμα συνομιλιών">💬</button>
+
+      <section id="chat-drawer" class="chat-drawer is-hidden">
+        <iframe src="<%= messages_path(panel: 1, tab: "personal") %>" class="chat-drawer-frame" title="Chat panel"></iframe>
+      </section>
+      <% end %>
+    <% else %>
+      <main class="auth-shell">
+        <section class="section-card auth-card">
+          <%= yield %>
+        </section>
+      </main>
+    <% end %>
+
+    <script>
+      (function () {
+        if (window.__chatHandlersBound) return;
+        window.__chatHandlersBound = true;
+
+        var fab = document.getElementById("chat-fab");
+        var drawer = document.getElementById("chat-drawer");
+        if (!fab || !drawer) return;
+
+        var dragging = false;
+        var moved = false;
+        var startY = 0;
+        var startLeft = 0;
+        var startTop = 0;
+        var closeTimer = null;
+        var drawerBaseWidth = parseFloat(window.getComputedStyle(drawer).width) || 390;
+        var drawerBaseHeight = parseFloat(window.getComputedStyle(drawer).height) || 760;
+
+        function clamp(value, min, max) {
+          return Math.max(min, Math.min(max, value));
+        }
+
+        function getDragBounds() {
+          return {
+            left: 8,
+            top: 8,
+            right: window.innerWidth - 8,
+            bottom: window.innerHeight - 8
+          };
+        }
+
+        function positionDrawerNearFab() {
+          var bounds = getDragBounds();
+          var fabRect = fab.getBoundingClientRect();
+          var horizontalGap = 0;
+          var verticalGap = 12;
+          var maxWidthLeftOfFab = Math.max(1, fabRect.left - bounds.left - horizontalGap);
+          var fabCenterY = fabRect.top + (fabRect.height / 2);
+          var openUp = fabCenterY > (window.innerHeight / 2);
+          var maxHeightInViewport = openUp
+            ? Math.max(1, fabRect.top - bounds.top - verticalGap)
+            : Math.max(1, bounds.bottom - fabRect.bottom - verticalGap);
+
+          var fittedWidth = Math.min(drawerBaseWidth, maxWidthLeftOfFab);
+          var fittedHeight = Math.min(drawerBaseHeight, maxHeightInViewport);
+
+          if (!Number.isFinite(fittedWidth) || fittedWidth < 1) fittedWidth = 1;
+          if (!Number.isFinite(fittedHeight) || fittedHeight < 1) fittedHeight = 1;
+
+          var drawerWidth = Math.floor(fittedWidth);
+          var drawerHeight = Math.floor(fittedHeight);
+
+          drawer.style.width = drawerWidth + "px";
+          drawer.style.height = drawerHeight + "px";
+
+          var targetLeft = fabRect.left - drawerWidth - horizontalGap;
+          var targetTop = openUp
+            ? fabRect.top - drawerHeight - verticalGap
+            : fabRect.bottom + verticalGap;
+
+          targetTop = clamp(targetTop, bounds.top, bounds.bottom - drawerHeight);
+          targetLeft = clamp(targetLeft, bounds.left, bounds.right - drawerWidth);
+
+          drawer.style.left = targetLeft + "px";
+          drawer.style.top = targetTop + "px";
+          drawer.style.right = "auto";
+          drawer.style.bottom = "auto";
+        }
+
+        function setDrawerGenieOrigin() {
+          var fabRect = fab.getBoundingClientRect();
+          var drawerRect = drawer.getBoundingClientRect();
+          var y = clamp((fabRect.top + (fabRect.height / 2)) - drawerRect.top, 16, drawerRect.height - 16);
+          drawer.style.setProperty("--genie-origin-x", "100%");
+          drawer.style.setProperty("--genie-origin-y", y + "px");
+        }
+
+        function openDrawer() {
+          if (closeTimer) {
+            window.clearTimeout(closeTimer);
+            closeTimer = null;
+          }
+
+          drawer.classList.remove("is-hidden", "is-closing");
+          positionDrawerNearFab();
+
+          requestAnimationFrame(function () {
+            setDrawerGenieOrigin();
+            drawer.classList.add("is-opening");
+            requestAnimationFrame(function () {
+              drawer.classList.add("is-open");
+              drawer.classList.remove("is-opening");
+            });
+          });
+        }
+
+        function closeDrawer() {
+          if (drawer.classList.contains("is-hidden")) return;
+
+          if (closeTimer) {
+            window.clearTimeout(closeTimer);
+            closeTimer = null;
+          }
+
+          setDrawerGenieOrigin();
+          drawer.classList.remove("is-open", "is-opening");
+          drawer.classList.add("is-closing");
+
+          closeTimer = window.setTimeout(function () {
+            drawer.classList.add("is-hidden");
+            drawer.classList.remove("is-closing");
+            closeTimer = null;
+          }, 400);
+        }
+
+        function toggleDrawer() {
+          if (drawer.classList.contains("is-hidden")) {
+            openDrawer();
+          } else {
+            closeDrawer();
+          }
+        }
+
+        fab.addEventListener("pointerdown", function (event) {
+          dragging = true;
+          moved = false;
+          startY = event.clientY;
+
+          var rect = fab.getBoundingClientRect();
+          startLeft = rect.left;
+          startTop = rect.top;
+
+          fab.setPointerCapture(event.pointerId);
+          fab.style.left = rect.left + "px";
+          fab.style.top = rect.top + "px";
+          fab.style.right = "auto";
+          fab.style.bottom = "auto";
+        });
+
+        fab.addEventListener("pointermove", function (event) {
+          if (!dragging) return;
+          var dy = event.clientY - startY;
+
+          if (Math.abs(dy) > 3) {
+            if (!moved && !drawer.classList.contains("is-hidden")) {
+              closeDrawer();
+            }
+            moved = true;
+          }
+
+          var bounds = getDragBounds();
+          var nextTop = clamp(startTop + dy, bounds.top, bounds.bottom - fab.offsetHeight);
+          fab.style.left = startLeft + "px";
+          fab.style.top = nextTop + "px";
+
+          if (!drawer.classList.contains("is-hidden")) {
+            positionDrawerNearFab();
+            setDrawerGenieOrigin();
+          }
+        });
+
+        fab.addEventListener("pointerup", function (event) {
+          if (!dragging) return;
+          dragging = false;
+          fab.releasePointerCapture(event.pointerId);
+          if (!moved) toggleDrawer();
+        });
+
+        window.addEventListener("resize", function () {
+          if (!drawer.classList.contains("is-hidden")) {
+            positionDrawerNearFab();
+            setDrawerGenieOrigin();
+          }
+        });
+
+        document.addEventListener("contextmenu", function (event) {
+          var ownMessage = event.target.closest("[data-own-message='true']");
+          document.querySelectorAll("[data-chat-menu].is-open").forEach(function (menu) {
+            menu.classList.remove("is-open");
+          });
+
+          if (!ownMessage) return;
+          event.preventDefault();
+
+          var menu = ownMessage.querySelector("[data-chat-menu]");
+          if (!menu) return;
+
+          menu.classList.add("is-open");
+          menu.style.left = event.clientX + "px";
+          menu.style.top = event.clientY + "px";
+        });
+
+        function csrfToken() {
+          var tag = document.querySelector("meta[name='csrf-token']");
+          return tag ? tag.getAttribute("content") : "";
+        }
+
+        function closeOpenMenus() {
+          document.querySelectorAll("[data-chat-menu].is-open").forEach(function (menu) {
+            menu.classList.remove("is-open");
+          });
+        }
+
+        function escapeHtml(value) {
+          return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function formatMessageBody(value) {
+          var normalized = String(value || "").replace(/\r\n/g, "\n");
+          var parts = normalized.split(/\n{2,}/);
+          return parts.map(function (part) {
+            return "<p>" + escapeHtml(part).replace(/\n/g, "<br>") + "</p>";
+          }).join("");
+        }
+
+        function closeInlineEditor(bubble) {
+          if (!bubble) return;
+          var editor = bubble.querySelector("[data-inline-editor]");
+          if (!editor) return;
+
+          editor.classList.add("is-hidden");
+          bubble.classList.remove("is-editing");
+        }
+
+        function openInlineEditor(bubble) {
+          if (!bubble) return;
+          var editor = bubble.querySelector("[data-inline-editor]");
+          var input = bubble.querySelector("[data-inline-input]");
+          if (!editor || !input) return;
+
+          bubble.classList.add("is-editing");
+          editor.classList.remove("is-hidden");
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+
+        async function deleteMessage(bubble) {
+          var deleteUrl = bubble ? bubble.getAttribute("data-delete-url") : "";
+          if (!deleteUrl) return;
+
+          if (!window.confirm("Να διαγραφεί το μήνυμα;")) return;
+
+          var response = await fetch(deleteUrl, {
+            method: "DELETE",
+            headers: {
+              "X-CSRF-Token": csrfToken(),
+              "Accept": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
+            },
+            credentials: "same-origin"
+          });
+
+          if (response.ok) {
+            var bubbleRow = bubble.closest(".chat-bubble-row");
+            if (bubbleRow) {
+              bubbleRow.remove();
+            }
+          }
+        }
+
+        async function applyInlineEdit(bubble) {
+          var updateUrl = bubble ? bubble.getAttribute("data-update-url") : "";
+          var input = bubble ? bubble.querySelector("[data-inline-input]") : null;
+          var applyBtn = bubble ? bubble.querySelector("[data-inline-apply]") : null;
+          if (!updateUrl || !input) return;
+
+          var newBody = input.value.trim();
+          if (!newBody) return;
+
+          if (bubble.dataset.saving === "1") return;
+          bubble.dataset.saving = "1";
+          if (applyBtn) applyBtn.disabled = true;
+
+          var body = new URLSearchParams();
+          body.append("message[body]", newBody);
+
+          try {
+            var response = await fetch(updateUrl, {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-CSRF-Token": csrfToken(),
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+              },
+              body: body.toString(),
+              credentials: "same-origin"
+            });
+
+            if (response.ok) {
+              var payload = await response.json();
+              var updatedBody = payload && payload.body ? String(payload.body) : newBody;
+              var textBox = bubble.querySelector("[data-bubble-text]");
+              if (textBox) {
+                textBox.innerHTML = formatMessageBody(updatedBody);
+              }
+
+              bubble.setAttribute("data-original-body", updatedBody);
+              input.value = updatedBody;
+              closeInlineEditor(bubble);
+            }
+          } finally {
+            bubble.dataset.saving = "0";
+            if (applyBtn) applyBtn.disabled = false;
+          }
+        }
+
+        document.addEventListener("click", function (event) {
+          var actionButton = event.target.closest("[data-chat-action]");
+          if (actionButton) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            var bubble = actionButton.closest(".chat-bubble");
+            if (!bubble) return;
+
+            var action = actionButton.getAttribute("data-chat-action");
+            closeOpenMenus();
+
+            if (action === "edit") {
+              openInlineEditor(bubble);
+              return;
+            }
+
+            if (action === "delete") {
+              deleteMessage(bubble);
+              return;
+            }
+          }
+
+          var cancelButton = event.target.closest("[data-inline-cancel]");
+          if (cancelButton) {
+            event.preventDefault();
+            var cancelBubble = cancelButton.closest(".chat-bubble");
+            if (!cancelBubble) return;
+
+            var input = cancelBubble.querySelector("[data-inline-input]");
+            var originalBody = cancelBubble.getAttribute("data-original-body") || "";
+            if (input) {
+              input.value = originalBody;
+            }
+
+            closeInlineEditor(cancelBubble);
+            return;
+          }
+
+          var applyButton = event.target.closest("[data-inline-apply]");
+          if (applyButton) {
+            event.preventDefault();
+            var applyBubble = applyButton.closest(".chat-bubble");
+            if (!applyBubble) return;
+
+            applyInlineEdit(applyBubble);
+            return;
+          }
+
+          closeOpenMenus();
+        });
+      })();
+    </script>
+
+    <script>
+      (function () {
+        var toasts = document.querySelectorAll("[data-flash-toast]");
+        if (!toasts.length) return;
+
+        toasts.forEach(function (toast, index) {
+          window.setTimeout(function () {
+            toast.classList.add("is-visible");
+          }, 30 + index * 60);
+
+          window.setTimeout(function () {
+            toast.classList.add("is-fade-out");
+          }, 3600 + index * 120);
+
+          window.setTimeout(function () {
+            toast.remove();
+          }, 4200 + index * 120);
+        });
+      })();
+    </script>
+  </body>
+</html>

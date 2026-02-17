@@ -1,0 +1,22 @@
+<section class="section-card">
+  <div class="page-title-row">
+    <h1>Todo items</h1>
+  </div>
+
+  <div class="page-actions-row">
+    <%= link_to "New todo item", new_todo_item_path, class: "ui-btn ui-btn-primary" %>
+  </div>
+
+  <div id="todo_items">
+    <% if @todo_items.any? %>
+      <% @todo_items.each do |todo_item| %>
+        <%= render todo_item %>
+        <div class="page-actions-row">
+          <%= link_to "Show this todo item", todo_item, class: "ui-btn ui-btn-secondary" %>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="empty-state">Δεν υπάρχουν todo items ακόμη.</p>
+    <% end %>
+  </div>
+</section>

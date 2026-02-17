@@ -1,0 +1,15 @@
+<section class="section-card">
+  <div class="page-title-row">
+    <%= link_to "←", posts_path, class: "auth-back-link", aria: { label: "Back to posts" } %>
+    <h1>Λεπτομέρειες ανάρτησης</h1>
+  </div>
+
+  <%= render partial: "posts/post", locals: { post: @post, show_view_link: false, show_owner_actions: false } %>
+
+  <% if @post.user_id == current_user.id %>
+    <div class="message-show-actions">
+      <%= link_to "Επεξεργασία", edit_post_path(@post), class: "ui-btn ui-btn-secondary" %>
+      <%= button_to "Διαγραφή", @post, method: :delete, class: "ui-btn ui-btn-danger", form_class: "message-show-destroy-form" %>
+    </div>
+  <% end %>
+</section>

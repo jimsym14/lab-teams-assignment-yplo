@@ -1,0 +1,8 @@
+<section class="section-card post-editor-shell">
+  <div class="page-title-row">
+    <%= link_to "←", posts_path, class: "auth-back-link", aria: { label: "Back to posts" } %>
+    <h1>Επεξεργασία ανάρτησης</h1>
+  </div>
+
+  <%= render "form", post: @post %>
+</section>

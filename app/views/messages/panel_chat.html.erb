@@ -1,0 +1,55 @@
+<section class="chat-panel-shell chat-panel-chat">
+  <header class="chat-panel-topbar">
+    <% if @active_tab == "group" %>
+      <%= link_to "←", messages_path(panel: 1, tab: "group"), class: "auth-back-link", aria: { label: "Πίσω" } %>
+      <h1><%= @active_group_chat&.name || "Ομάδα" %></h1>
+    <% else %>
+      <%= link_to "←", messages_path(panel: 1, tab: "personal"), class: "auth-back-link", aria: { label: "Πίσω" } %>
+      <h1><%= @active_chat_user&.name.presence || @active_chat_user&.email || "Συνομιλία" %></h1>
+    <% end %>
+  </header>
+
+  <div class="chat-panel-thread chat-thread-list" id="chat-thread-list">
+    <% @conversation_messages.each do |message| %>
+      <%= render partial: "messages/message", locals: { message: message } %>
+    <% end %>
+  </div>
+
+  <div class="chat-reply-box chat-panel-composer">
+    <% if @active_tab == "group" && @active_group_chat.present? %>
+      <%= form_with model: @reply_message, url: messages_path do |form| %>
+        <%= form.hidden_field :delivery_mode, value: "group" %>
+        <%= form.hidden_field :subject, value: "Chat" %>
+        <%= form.hidden_field :group_chat_id, value: @active_group_chat.id %>
+        <%= hidden_field_tag :panel, 1 %>
+        <%= hidden_field_tag :tab, "group" %>
+
+        <div class="field">
+          <%= form.text_area :body, rows: 3, class: "chat-reply-input", placeholder: "Γράψε μήνυμα στην ομάδα..." %>
+        </div>
+
+        <div class="actions">
+          <%= form.submit "Αποστολή", class: "ui-btn ui-btn-primary" %>
+        </div>
+      <% end %>
+    <% elsif @active_tab == "personal" && @active_chat_user.present? %>
+      <%= form_with model: @reply_message, url: messages_path do |form| %>
+        <%= form.hidden_field :delivery_mode, value: "personal" %>
+        <%= form.hidden_field :subject, value: "Chat" %>
+        <%= form.hidden_field :recipient_id, value: @active_chat_user.id %>
+        <%= hidden_field_tag :panel, 1 %>
+        <%= hidden_field_tag :tab, "personal" %>
+
+        <div class="field">
+          <%= form.text_area :body, rows: 3, class: "chat-reply-input", placeholder: "Γράψε μήνυμα..." %>
+        </div>
+
+        <div class="actions">
+          <%= form.submit "Αποστολή", class: "ui-btn ui-btn-primary" %>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="empty-state">Η συνομιλία δεν βρέθηκε.</p>
+    <% end %>
+  </div>
+</section>

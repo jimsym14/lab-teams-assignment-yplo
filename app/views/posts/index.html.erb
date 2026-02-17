@@ -1,0 +1,24 @@
+<section class="section-card">
+  <div class="page-title-row">
+    <h1>Αναρτήσεις</h1>
+  </div>
+
+  <%= form_with url: posts_path, method: :get, local: true, class: "page-search-form" do %>
+    <%= text_field_tag :q, params[:q], placeholder: "Αναζήτηση αναρτήσεων...", class: "page-search-input", aria: { label: "Αναζήτηση αναρτήσεων" } %>
+    <%= submit_tag "Αναζήτηση", class: "ui-btn ui-btn-secondary page-search-btn" %>
+  <% end %>
+
+  <div class="new-link-row">
+    <%= link_to "Νέα ανάρτηση", new_post_path, class: "ui-btn ui-btn-primary" %>
+  </div>
+
+  <div id="posts">
+    <% if @posts.any? %>
+      <% @posts.each do |post| %>
+        <%= render post %>
+      <% end %>
+    <% else %>
+      <p class="empty-state">Δεν υπάρχουν αναρτήσεις ακόμη.</p>
+    <% end %>
+  </div>
+</section>

@@ -1,0 +1,29 @@
+<section class="section-card contacts-page">
+  <div class="page-title-row">
+    <h1>Επαφές</h1>
+  </div>
+
+  <% if @contacts.any? %>
+    <ul class="contacts-list">
+      <% @contacts.each do |contact| %>
+        <li class="ui-list-item contacts-item">
+          <span><%= contact.contact_user.name %> - <%= contact.contact_user.email %></span>
+          <%= button_to "Αφαίρεση", contact_path(contact), method: :delete, class: "ui-btn ui-btn-danger" %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="empty-state">Δεν υπάρχουν επαφές ακόμη.</p>
+  <% end %>
+
+  <h2 class="contacts-form-title">Προσθήκη επαφής</h2>
+  <%= form_with url: contacts_path, method: :post do |f| %>
+    <div class="field">
+      <%= label_tag :contact_email, "Email χρήστη" %>
+      <%= email_field_tag "contact[email]", nil, id: "contact_email", placeholder: "example@domain.com" %>
+    </div>
+    <div class="page-actions-row">
+      <%= f.submit "Προσθήκη", class: "ui-btn ui-btn-primary" %>
+    </div>
+  <% end %>
+</section>

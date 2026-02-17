@@ -1,0 +1,13 @@
+<section class="section-card post-editor-shell">
+  <div class="post-editor-header">
+    <div class="message-new-title">
+      <%= link_to "←", posts_path, class: "auth-back-link", aria: { label: "Back to posts" } %>
+      <div>
+      <h1>Νέα ανάρτηση</h1>
+      <p class="post-editor-subtitle">Δημιούργησε μια καθαρή, οργανωμένη ανάρτηση για τις ενημερώσεις της ομάδας.</p>
+      </div>
+    </div>
+  </div>
+
+  <%= render "form", post: @post %>
+</section>
