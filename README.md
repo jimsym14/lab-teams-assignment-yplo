@@ -14,8 +14,8 @@
 
 Πρότυπο MVC. Δύο λογικά μέρη, κοινή βάση & Models:
 
-- **Portal (`/portal/...`):** Rails Controllers + ERB Views. Auth μέσω Devise (sessions + Google OAuth2).
-- **API (`/signup`, `/auth/...`, `/todos/...`):** JSON controllers (`Api::V1`). Auth μέσω Bearer Token (`has_secure_token`).
+- **Portal (`/portal/...`):**
+- **API (`/signup`, `/auth/...`, `/todos/...`):**
 
 ```
 app/controllers/
@@ -34,13 +34,27 @@ app/models/
 └── todo.rb, todo_item.rb
 ```
 
-Βάση SQLite3. Βασικές σχέσεις: User → has_many posts, contacts, messages, todos. Todo → has_many todo_items (dependent: destroy). Contact → self-join. Message → sender/recipient ή group_chat.
+## Βάση SQLite3
+
+**Βασικές σχέσεις:**
+
+- User → has_many posts, contacts, messages, todos
+- Todo → has_many todo_items (dependent: destroy)
+- Contact → self-join
+- Message → sender/recipient ή group_chat
 
 ---
 
 ## Stack
 
-Ruby 3.2.10, Rails 7.1.5, SQLite3, Puma, Devise + omniauth-google-oauth2, RSpec (34 tests), Rswag (OpenAPI 3.0).
+- Ruby 3.2.10
+- Rails 7.1.5
+- SQLite3
+- Puma
+- Devise
+- omniauth-google-oauth2
+- RSpec
+- Rswag (OpenAPI 3.0)
 
 ---
 
