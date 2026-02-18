@@ -1,93 +1,83 @@
-# Εγχειρίδιο Εργασίας: Υπηρεσιοστρεφές Λογισμικό (2025-2026)
+# Εγχειρίδιο Χρήσης (User Manual)
 
-**Ονοματεπώνυμο:** Δημήτρης Συμεωνίδης
-**ΑΜ:** Π22165
-**Θέμα:** Portal Εργαστηρίων & Todo REST API
+**Δημήτρης Συμεωνίδης** | **Π22165**
 
----
-
-## 1. Σύνοψη
-
-Η εργασία αποτελείται από δύο μέρη που λειτουργούν στην ίδια εφαρμογή (Ruby on Rails):
-
-1. **Portal Εργαστηρίων (Web App):** Διαχείριση αναρτήσεων, αναζήτηση συνεργατών, προσωπικά μηνύματα και ομαδικές συνομιλίες.
-2. **REST API (Todos):** Πλήρες API για διαχείριση λιστών εργασιών, τεκμηριωμένο με Swagger/OpenAPI.
+> Τεχνική αναφορά: **documentation_p22165.pdf** | Γενικές πληροφορίες: **[README.md](README.md)**
 
 ---
 
-## 2. Οδηγίες Εγκατάστασης & Εκτέλεσης
-
-Για να τρέξετε την εφαρμογή τοπικά:
-
-**Βήμα 1: Εγκατάσταση gems**
+## 1. Εγκατάσταση
 
 ```bash
-bundle install
+bundle install              # Εγκατάσταση gems
+ruby bin/rails db:setup     # Δημιουργία βάσης + demo δεδομένα (seeds)
+ruby bin/rails s            # Εκκίνηση server
 ```
 
-**Βήμα 2: Προετοιμασία Βάσης (ΠΡΟΣΟΧΗ)**
+Η εφαρμογή ανοίγει στο **http://localhost:3000**
 
-Έχω ετοιμάσει seeds ώστε να γεμίσει η βάση με demo δεδομένα (χρήστες, posts, todos) για να μην χρειάζεται να τα περνάτε με το χέρι κατά την εξέταση.
+Demo login: `student1@unipi.gr` / `password123` (ή `student2@unipi.gr` για δοκιμή chat).
 
-Τρέξτε την εντολή:
+Υποστηρίζεται και Google OAuth login. Για να λειτουργήσει, δημιουργήστε ένα `.env` αρχείο στο root του project με:
+
+```
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+```
+
+Τα κλειδιά δημιουργούνται από το [Google Cloud Console](https://console.cloud.google.com/) (APIs & Services → Credentials → OAuth 2.0 Client ID). Χωρίς αυτά, η εφαρμογή λειτουργεί κανονικά με email/password.
+
+---
+
+## 2. Portal (Θέμα 1)
+
+Μετά το login, από τη μπάρα πλοήγησης: Αναρτήσεις (δημιουργία/αναζήτηση ανά τίτλο ή κατηγορία), Επαφές (προσθήκη μέσω email), Μηνύματα (προσωπικά popup chat & ομαδικά), Ειδοποιήσεις (αυτόματες για νέα μηνύματα/επαφές).
+
+---
+
+## 3. Swagger UI (Θέμα 2)
+
+Διαδραστική τεκμηρίωση & δοκιμή API: **http://localhost:3000/api-docs**
+
+Επειδή το API είναι προστατευμένο, ακολουθήστε αυτά τα βήματα για να το δοκιμάσετε:
+
+1.  **Login & Λήψη Token:**
+    - Στο Swagger, ανοίξτε το endpoint `POST /auth/login`.
+    - Πατήστε **"Try it out"**.
+    - Στο JSON body βάλτε: `{"email": "student1@unipi.gr", "password": "password123"}`.
+    - Πατήστε **Execute**.
+    - Από την απάντηση (Response body), αντιγράψτε το `token` (χωρίς τα εισαγωγικά).
+
+2.  **Αυθεντικοποίηση (Authorize):**
+    - Κυλήστε στην κορυφή της σελίδας και πατήστε το κουμπί **Authorize** (με το λουκέτο).
+    - Στο πεδίο "Value", γράψτε: `Bearer <ΤΟ_TOKEN_ΣΑΣ>` (π.χ. `Bearer 2983d7s...`).
+    - Πατήστε **Authorize** και μετά **Close**.
+
+3.  **Δοκιμή Endpoints:**
+    - Τώρα μπορείτε να καλέσετε οποιοδήποτε endpoint (π.χ. `GET /todos`), να πατήσετε "Execute" και να δείτε τα αποτελέσματα.
+
+---
+
+## 4. HTTPie
 
 ```bash
-bin/rails db:setup
+# Login
+http POST :3000/auth/login email=student1@unipi.gr password=password123
+
+# CRUD Todos (αντικαταστήστε <TOKEN> με το token από το login)
+http GET :3000/todos "Authorization: Bearer <TOKEN>"
+http POST :3000/todos title="Νέα εργασία" "Authorization: Bearer <TOKEN>"
+http DELETE :3000/todos/1 "Authorization: Bearer <TOKEN>"
+
+# CRUD Items
+http POST :3000/todos/1/items title="Βήμα 1" done:=false "Authorization: Bearer <TOKEN>"
+http PUT :3000/todos/1/items/1 done:=true "Authorization: Bearer <TOKEN>"
 ```
 
-(Αυτό κάνει create, migrate και seed αυτόματα)
+---
 
-**Βήμα 3: Εκκίνηση Server**
+## 5. Tests
 
 ```bash
-bin/rails s
+bundle exec rspec spec/requests/api
 ```
-
-Η εφαρμογή ανοίγει στο: http://localhost:3000
-
----
-
-## 3. Demo Λογαριασμοί
-
-Μπορείτε να συνδεθείτε άμεσα με τους παρακάτω χρήστες που δημιουργούνται από τα seeds:
-
-- Email: student1@unipi.gr | Pass: password123 (Έχει ήδη δεδομένα)
-- Email: student2@unipi.gr | Pass: password123 (Για δοκιμή chat)
-
-Σημείωση: Υπάρχει και δυνατότητα Google Login αν ρυθμιστούν τα keys στο `.env`, αλλά δουλεύει κανονικά και με email.
-
----
-
-## 4. Λειτουργίες Portal (Θέμα 1)
-
-Στο web περιβάλλον θα βρείτε:
-
-- **Αναζήτηση (Search):** Λειτουργεί στο index των Posts. Ψάχνει σε τίτλο, περιεχόμενο και κατηγορία ταυτόχρονα (υλοποιήθηκε με scope στο Model).
-- **Μηνύματα:** Υποστηρίζονται προσωπικά μηνύματα (popup) και Group Chats.
-- **Ειδοποιήσεις:** Ο χρήστης βλέπει ειδοποιήσεις όταν λαμβάνει μήνυμα ή τον προσθέτουν σε επαφές.
-- **Επαφές:** Διαχείριση λίστας φίλων/συνεργατών.
-
----
-
-## 5. REST API & Documentation (Θέμα 2)
-
-Το API βρίσκεται στο namespace `/api/v1` και είναι πλήρως διαχωρισμένο από το Web App.
-
-**Swagger UI (Τεκμηρίωση):**
-Όλα τα endpoints είναι τεκμηριωμένα αυτόματα μέσω rswag. Μπορείτε να τα δείτε και να τα δοκιμάσετε (Try it out) εδώ:  
-👉 http://localhost:3000/api-docs
-
-**Βασική Ροή Δοκιμής API:**
-
-1. Κάντε `POST /auth/login` (μέσω Swagger ή Postman) με τα demo στοιχεία.
-2. Αντιγράψτε το token που επιστρέφεται.
-3. Χρησιμοποιήστε το token ως Bearer Token για να καλέσετε τα endpoints των Todos (`GET /todos`, `POST /todos` κλπ).
-
----
-
-## 6. Τεχνικές Σημειώσεις
-
-- **Αρχιτεκτονική:** Ακολούθησα το MVC pattern. Προσπάθησα να κρατήσω τους Controllers "thin" και να βάλω τη λογική (validations, scopes) στα Models.
-- **Testing:** Υπάρχουν Integration Tests (RSpec) στον φάκελο `spec/requests/api` τα οποία παράγουν και το Swagger file.
-- **Security:** Χρησιμοποιώ Strong Parameters παντού και Token Auth για το API (με rotation tokens για ασφάλεια).
-- **Routing:** Έκανα χρήση namespace για το API ώστε να υποστηρίζει μελλοντικά versions (v1).

@@ -1,0 +1,344 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  "/signup":
+    post:
+      summary: Signup
+      tags:
+        - Auth
+      parameters: []
+      responses:
+        "201":
+          description: created
+        "422":
+          description: unprocessable entity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: student1@unipi.gr
+                password:
+                  type: string
+                  example: password123
+                password_confirmation:
+                  type: string
+                  example: password123
+                name:
+                  type: string
+                  example: Student One
+                student_id:
+                  type: string
+                  nullable: true
+                  example: Π22165
+              required:
+                - email
+                - password
+                - password_confirmation
+                - name
+            example:
+              email: student1@unipi.gr
+              password: password123
+              password_confirmation: password123
+              name: Student One
+              student_id: Π22165
+  "/auth/login":
+    post:
+      summary: Login
+      tags:
+        - Auth
+      parameters: []
+      responses:
+        "200":
+          description: ok
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: student1@unipi.gr
+                password:
+                  type: string
+                  example: password123
+              required:
+                - email
+                - password
+            example:
+              email: student1@unipi.gr
+              password: password123
+  "/auth/logout":
+    get:
+      summary: Logout
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "200":
+          description: ok
+  "/todos":
+    get:
+      summary: List all todos and todo items
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "200":
+          description: ok
+    post:
+      summary: Create a new todo
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "201":
+          description: created
+        "422":
+          description: unprocessable entity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Prepare service-oriented lab report
+                description:
+                  type: string
+                  nullable: true
+                  example: Complete API and Swagger documentation by Friday.
+              required:
+                - title
+            example:
+              title: Prepare service-oriented lab report
+              description: Complete API and Swagger documentation by Friday.
+  "/todos/{id}":
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          example: 1
+        required: true
+    get:
+      summary: Get a todo
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "200":
+          description: ok
+    put:
+      summary: Update a todo
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "200":
+          description: ok
+        "422":
+          description: unprocessable entity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Updated todo title
+                description:
+                  type: string
+                  nullable: true
+                  example: Updated todo description with more details.
+            example:
+              title: Updated todo title
+              description: Updated todo description with more details.
+    delete:
+      summary: Delete a todo and its items
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "200":
+          description: ok
+  "/todos/{id}/items":
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          example: 1
+        required: true
+    post:
+      summary: Create a new todo item
+      tags:
+        - Todo Items
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "201":
+          description: created
+        "422":
+          description: unprocessable entity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Implement authentication endpoint tests
+                done:
+                  type: boolean
+                  example: false
+              required:
+                - title
+            example:
+              title: Implement authentication endpoint tests
+              done: false
+  "/todos/{id}/items/{iid}":
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          example: 1
+        required: true
+      - name: iid
+        in: path
+        schema:
+          type: integer
+          example: 2
+        required: true
+    get:
+      summary: Get a todo item
+      tags:
+        - Todo Items
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "200":
+          description: ok
+    put:
+      summary: Update a todo item
+      tags:
+        - Todo Items
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "200":
+          description: ok
+        "422":
+          description: unprocessable entity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Implement authentication endpoint tests (updated)
+                done:
+                  type: boolean
+                  example: true
+            example:
+              title: Implement authentication endpoint tests (updated)
+              done: true
+    delete:
+      summary: Delete a todo item
+      tags:
+        - Todo Items
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+            example: Bearer sample_api_token_123456
+      responses:
+        "200":
+          description: ok
+servers:
+  - url: http://{defaultHost}
+    variables:
+      defaultHost:
+        default: localhost:3000

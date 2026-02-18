@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
-  mount Rswag::Ui::Engine => '/api-docs' if defined?(Rswag::Ui)
+  mount Rswag::Ui::Engine => '/api-docs'
+  mount Rswag::Api::Engine => '/api-docs'
   devise_for :users, controllers: { omniauth_callbacks: "users/omniauth_callbacks" }
 
   # ΘΕΜΑ 1: Λειτουργίες Portal

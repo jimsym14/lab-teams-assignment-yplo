@@ -1,133 +1,80 @@
 # Lab Team Portal & Todo REST API
 
-> Εργασία στο μάθημα Υπηρεσιοστρεφές Λογισμικό 2026  
-> **Φοιτητής:** Δημήτρης Συμεωνίδης | **ΑΜ:** Π22165
+> Υπηρεσιοστρεφές Λογισμικό 2026 | **Δημήτρης Συμεωνίδης** | **Π22165**
+
+> Οδηγίες χρήσης: **[USER_MANUAL.md](USER_MANUAL.md)** | Τεχνική αναφορά: **documentation_p22165.pdf**
+
+---
 
 ## Περιγραφή
 
-Η παρούσα εφαρμογή υλοποιεί τα δύο ζητούμενα της εργασίας σε ενιαίο codebase:
+Ενιαίο Ruby on Rails codebase που υλοποιεί και τα δύο θέματα: Web Portal (αναρτήσεις, αναζήτηση, επαφές, μηνύματα popup & ομαδικά, ειδοποιήσεις) και RESTful API για Todo lists (12 endpoints, Bearer Token auth, Swagger UI).
 
-1. **Web Portal:**
-2. **REST API:** Πλήρης διαχείριση Todo lists
+## Αρχιτεκτονική
 
-Για αναλυτικές οδηγίες χρήσης, δείτε το αρχείο: **[USER_MANUAL.md](USER_MANUAL.md)**
+Πρότυπο MVC. Δύο λογικά μέρη, κοινή βάση & Models:
 
----
+- **Portal (`/portal/...`):** Rails Controllers + ERB Views. Auth μέσω Devise (sessions + Google OAuth2).
+- **API (`/signup`, `/auth/...`, `/todos/...`):** JSON controllers (`Api::V1`). Auth μέσω Bearer Token (`has_secure_token`).
 
-## Technical Stack (Toolset)
+```
+app/controllers/
+├── posts_controller.rb           # Αναρτήσεις
+├── contacts_controller.rb        # Επαφές
+├── messages_controller.rb        # Μηνύματα
+├── notifications_controller.rb   # Ειδοποιήσεις
+└── api/v1/
+    ├── auth_controller.rb        # Signup/Login/Logout
+    ├── todos_controller.rb       # Todos CRUD
+    └── todo_items_controller.rb  # Items CRUD
 
-Η εφαρμογή αναπτύχθηκε με τα εξής εργαλεία και βιβλιοθήκες:
-
-- **Framework:** Ruby on Rails 7.x
-- **Language:** Ruby 3.x
-- **Database:** SQLite3 (Default configuration)
-- **Testing:** RSpec (Integration & Request specs)
-- **Documentation:** Rswag (OpenAPI 3.0 / Swagger UI)
-- **Authentication:**
-  - _Web:_ Devise (Session based + Google OAuth2)
-  - _API:_ Custom Bearer Token strategy
-
-### Βασικά Gems
-
-```ruby
-gem 'devise'                  # Αυθεντικοποίηση χρηστών
-gem 'omniauth-google-oauth2'  # Google Login
-gem 'rswag-api'               # API Documentation endpoints
-gem 'rswag-ui'                # Swagger UI interface
-gem 'rspec-rails'             # Testing framework
+app/models/
+├── user.rb, post.rb, contact.rb, message.rb
+├── group_chat.rb, notification.rb
+└── todo.rb, todo_item.rb
 ```
 
----
-
-## Setup & Configuration
-
-### 1. Εγκατάσταση Εξαρτήσεων
-
-```bash
-bundle install
-```
-
-### 2. Ρύθμιση Βάσης Δεδομένων
-
-Έχουν δημιουργηθεί κατάλληλα seeds ώστε η βάση να αρχικοποιείται με χρήστες, posts και todos για άμεση επίδειξη.
-
-```bash
-# Δημιουργία, Migration και Seeding με μία εντολή:
-bin/rails db:setup
-```
-
-### 3. Google OAuth (Προαιρετικό)
-
-Η εφαρμογή λειτουργεί κανονικά με email/password. Για να λειτουργήσει το Google Login, πρέπει να οριστούν στο περιβάλλον (ή σε αρχείο `.env`) τα:
-
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
+Βάση SQLite3. Βασικές σχέσεις: User → has_many posts, contacts, messages, todos. Todo → has_many todo_items (dependent: destroy). Contact → self-join. Message → sender/recipient ή group_chat.
 
 ---
 
-## Αρχιτεκτονική & Endpoints
+## Stack
 
-### Δομή Project
-
-Η εφαρμογή ακολουθεί το MVC πρότυπο με διαχωρισμό namespaces:
-
-- **Portal (`/`):** Χρησιμοποιεί τυπικούς Rails Controllers και Views (erb).
-- **API (`/api/v1`):** Χρησιμοποιεί `Api::V1::BaseController` και επιστρέφει αποκλειστικά JSON.
-
-### Υλοποιημένα API Endpoints
-
-Καλύπτονται πλήρως οι απαιτήσεις του 2ου θέματος:
-
-| Verb   | Endpoint           | Περιγραφή                   |
-| ------ | ------------------ | --------------------------- |
-| POST   | `/signup`          | Εγγραφή χρήστη & λήψη token |
-| POST   | `/auth/login`      | Login & λήψη token          |
-| GET    | `/auth/logout`     | Ακύρωση token               |
-| GET    | `/todos`           | Λίστα όλων των Todos        |
-| POST   | `/todos`           | Δημιουργία νέου Todo        |
-| GET    | `/todos/:id`       | Λεπτομέρειες Todo           |
-| PUT    | `/todos/:id`       | Ενημέρωση Todo              |
-| DELETE | `/todos/:id`       | Διαγραφή Todo               |
-| POST   | `/todos/:id/items` | Προσθήκη Item σε Todo       |
-
-...(Πλήρης λίστα στο Swagger UI)
+Ruby 3.2.10, Rails 7.1.5, SQLite3, Puma, Devise + omniauth-google-oauth2, RSpec (34 tests), Rswag (OpenAPI 3.0).
 
 ---
 
-## Testing & Documentation
+## API Endpoints
 
-### Εκτέλεση Tests
+| Verb   | Endpoint                | Λειτουργία            |
+| ------ | ----------------------- | --------------------- |
+| POST   | `/signup`               | Εγγραφή & token       |
+| POST   | `/auth/login`           | Login & token         |
+| GET    | `/auth/logout`          | Logout                |
+| GET    | `/todos`                | Λίστα todos & items   |
+| POST   | `/todos`                | Δημιουργία todo       |
+| GET    | `/todos/:id`            | Προβολή todo          |
+| PUT    | `/todos/:id`            | Ενημέρωση todo        |
+| DELETE | `/todos/:id`            | Διαγραφή todo & items |
+| GET    | `/todos/:id/items/:iid` | Προβολή item          |
+| POST   | `/todos/:id/items`      | Δημιουργία item       |
+| PUT    | `/todos/:id/items/:iid` | Ενημέρωση item        |
+| DELETE | `/todos/:id/items/:iid` | Διαγραφή item         |
 
-Η εφαρμογή καλύπτεται από Integration Tests για το API, τα οποία εξασφαλίζουν την ορθότητα των απαντήσεων (Status 200, 201, 401, 422).
-
-```bash
-bundle exec rspec spec/requests/api
-```
-
-### Swagger UI
-
-Με βάση τα RSpec tests, παράγεται αυτόματα η τεκμηρίωση OpenAPI.  
-Μπορείτε να δείτε και να δοκιμάσετε τα endpoints στο:  
-http://localhost:3000/api-docs
-
----
-
-## Development History (Scaffolding)
-
-Για την κατασκευή της αρχιτεκτονικής της εφαρμογής και της βάσης δεδομένων, χρησιμοποιήθηκαν οι παρακάτω εντολές, ακολουθώντας τα πρότυπα του Rails:
+## Scaffolding
 
 ```bash
-# 1. Βασικά Μοντέλα Portal
+# Portal Models
 rails g scaffold Post title:string body:text category:string user:references
 rails g scaffold Contact user:references contact_user:references
 rails g scaffold Message sender:references recipient:references body:text
 rails g scaffold Notification user:references message:references kind:string read_at:datetime
 
-# 2. Μοντέλα Todo API (Θέμα 2)
+# Todo API Models
 rails g scaffold Todo title:string description:text user:references
 rails g scaffold TodoItem todo:references title:string done:boolean
 
-# 3. User & Auth Setup
+# User & Auth
 rails g devise:install
 rails g devise User name:string student_id:string provider:string uid:string api_token:string
 ```
